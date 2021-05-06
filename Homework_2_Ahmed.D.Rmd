@@ -1,0 +1,64 @@
+---
+title: "Homework 2"
+author: "Ahmed_Drammeh"
+date: "4/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Congressional Hearing
+
+The dataset below includes the names and dates of existence for all House, Senate, and Joint committees, subcommittees, and select and special committees from 1947 to 2010. Certain committees formed many temporary and special subcommittees with narrow
+jurisdictions over specific issues, while some committees changed their subcommittee names with greater frequency than others. In the columns titled *Committee* & *Subcommittee* for example, the values within the cells have a dependent relationship.The variable committee is a standalone body within the congress such as the "*Arms and Services Committee*", whereas the Subcommittee variable may represent a committee within the *Arms and services committee* Any hearing within a committe is denoted by the first three digits within the digits of the values in the Subcommittee column. For example, a value of 10506 refers to Committe 105, and Subcommitte 06. Furthermore, looking at the dataset, there are approaximately *100254* rows by *36* columns.
+
+
+```{r Cong_hear, echo=TRUE}
+library(tidyr)
+library(dplyr)
+Cong_hear<- read.csv("congressional_hearings.csv", stringsAsFactors=FALSE)
+str(Cong_hear)
+nrow(Cong_hear)
+ncol(Cong_hear)
+summary(Cong_hear$CISCommittee)
+summary(Cong_hear$Sessions)
+head(Cong_hear%>%select(1:12)%>%
+  filter(CISYear<1980 & Month >6))
+```
+
+## Covid_Italy codebook dataset
+
+The current scientific survey aims to provide a better understanding of how people in the UK experience the crisis caused by the coronavirus. In addition to questions regarding your personal behaviours and perceptions of the novel coronavirus, the study also assesses socio-demographic aspects and general characteristics. The study takes approximately 10 minutes to complete and is conducted as a joint collaboration effort by an international team of researchers. The resulting data may offer important insights to fight the coronavirus.
+The dataset contains *80* variables alongside *3460* observations.
+You can also embed plots, for example:
+
+```{r Covid, echo=TRUE}
+library(dplyr)
+Covid<-read.csv("covid_responses.csv", header=TRUE, stringsAsFactors = FALSE)
+str(Covid)
+nrow(Covid)
+ncol(Covid)
+head(Covid %>% 
+       select(1:7, 11:15) %>% 
+       filter(UserLanguage=="IT"))
+```
+
+## Supreme court Database codebook data import.
+
+The dataset includes four centuries of the Court's decisions, from its first decision in 1791 to the Court's most recent decision. As such, there are fifty three *53* columns or variables and *8966* rows/observations elements, orcomponents.
+
+
+```{r SCDC, echo= TRUE}
+library(dplyr)
+SCDC<- read.csv("scdb.csv", header=TRUE, stringsAsFactors=FALSE)
+str(SCDC)
+head(SCDC%>%
+  filter(chief=="Roberts") %>%
+  select(1:10))
+nrow(SCDC)
+ncol(SCDC)
+
+```
+

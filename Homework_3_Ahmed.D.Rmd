@@ -1,0 +1,101 @@
+---
+title: "Homework 3"
+author: "Ahmed_Drammeh"
+date: "4/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Obesity Hospitalization Data in England
+
+This dataset contains informaion regarding **finished admissions episodes** (FAE) for people in the United Kingdom who were admitted due to obesity issues. The dataset in particular is part of a larger grouped dataset on the same excel sheet, and requires tedious navigation inorder to separate the **FAE** information from the other redundant tables. The **FAE** episodes involving obese patients are categorized into age groups ranging from:
+
+* Under 16
+* 16 - 24
+* 25 - 34
+* 35 - 44
+* 45 - 54
+* 55 - 64
+* 65 - 74
+* 75 & Over
+
+Furthermore, these hospitalizations were recorded from 2002-2003 fiscal year all the way through 2012-2013. On the RAW excel spreadsheet, the dataset can be identified as *Table 7.2: Finished Admission Episodes with a primary diagnosis of obesity, by age group, 2002/03 to 2012/13*
+Inorder for any data analysis to be performed on the obesity information, the data had to be cleaned first. The data was imported into R-studio by skipping the first 37 rows of the spreadsheet, since these rows include data from **Table 7.1**, and not **7.2**. Apart from skipping the first 37 rows, the number of rows containing the data of interest had to be inputed within the read.csv file, and is inlcuded within the script. There are 13 rows and 12 columns within the dataset.
+The next paragraph describes the data cleaning and tidying effort:
+
+
+## Data cleaning - **Approach 1**
+
+The imported medical obesity dataset was poorly organized and the column and row names needed to be tidied and renamed. There are two ways to approach this. The first is with conventional R methodolgies of assigning new column names to an object, for example in our case( col.names), and then use this new object as an argument within the **names()** function to rename the column. The sequence of scripts below show this relationship.
+
+```{r Obesity, echo=TRUE}
+Obesity<- read.csv("obes-phys-acti-diet-eng-2014-tab_csv.csv",header =TRUE, stringsAsFactors= FALSE, skip=37, nrows= 13)
+str(Obesity)
+colnames(Obesity)
+col.names<-c("Fiscal_Year", "Total", "Under_16", "A16 - A24", "A25 - A34", "A35 - A44","A45 - A54", "A55 - A64", "A65 - A74","A75_Over")
+names(Obesity)<-col.names
+str(Obesity)
+head(Obesity)
+```
+
+## Data cleaning - **Approach 2**
+
+The second approach utilizes the **DPYLR** package, specifically the *rename()*, *select()*, and *slice()* functions to change the column names while also removing unnecessary empty rows. The second approach combined with the pipe operator makes for a much easier tidying method.
+
+```{r Obesity1, echo=TRUE}
+library(dplyr)
+Obesity1<- read.csv("obes-phys-acti-diet-eng-2014-tab_csv.csv",header =TRUE, stringsAsFactors= FALSE, skip=37, nrows= 13)
+str(Obesity1)
+colnames(Obesity1)
+Obesity2<-Obesity1 %>% rename(Fiscal_Year= X, "Under 16" = Under.16,
+                             "16 to 24"= X16.24, "25 to 34" = X25.34,
+                             "35 to 44" = X35.44,"45 to 54" = X45.54,
+                             "55 to 64" = X55.64,"65 to 74" = X65.74,
+                             "75 & Over" = X75.and.over) %>%
+  select(1:10) %>% slice(-1)
+str(Obesity2)
+head(Obesity2)
+```
+
+## Data tidying
+
+The dataset can be further tidied, by removing organizing the different ages into one column called *Age groups*,making it both ore visually appealing to look at aswell as easier for statistical analysis. Under the tidyverse package, the **gather()** is a great function to help consodlidate data from wide to long format, and that has been utilized in this portion of the data tidying. Utilizing the gather function helped s=change the data format from wide to long, while also removing all the *NA* values which were present.
+
+```{r Obesity2, echo=TRUE}
+library(tidyverse)
+Obesity3<-Obesity2%>% 
+  slice(-12) %>%
+  gather(key="Age_Groups", value="Obesity_cases", -1,-2, na.rm=TRUE)
+
+## Used global substitution function to change the character strings into numeric inroder to analyze them. dplyr as.numeric did not work well with numbers withi rows that have a comma(,) in them i.e.2,567
+
+Obesity3$Total<-as.numeric(as.character(gsub(",", "",Obesity3$Total)))
+Obesity3$Obesity_cases<-as.numeric(as.character(gsub(",", "",Obesity3$Obesity_cases)))
+head(Obesity3)
+
+```
+
+## Statstical analysis
+
+The scripts below show some statistical analysis of the Obesity hospitalization data. The major findings include measuremenets of central tendancy (**mean**, **standard deviation** and **coefficient of variation**), aswell as some 5 number summary including the **min**, **max** and **median**. Looking at the overall data from a global perspective, it can be seen that the age groups **35-44 & 45-54** have the highest number of hospitalizations per year due to obesity( **Max = 3277 & 3581, and on average = 1723 & 1740**) over the time frames between *2002/2003* - *2012/2013*. This makes sense, since metabolic rates diminish significantly around those ages. Also people tend to be married and care less about what they eat or look like arounfd those ages.
+The age groups with the lowest hospitalizations and obesity rates are **75 & Over( max = 115 and on average = 59)**.
+
+```{r Obesity3, echo=TRUE}
+library(tidyverse)
+Obesity4<-Obesity3 %>% 
+  group_by(Age_Groups) %>% 
+  summarise(Obesity_Min = min(Obesity_cases),
+            Obesity_mean = round(mean(Obesity_cases)),
+            Obesity_max = max(Obesity_cases),
+            Std.dev = sd(Obesity_cases)) %>%
+  mutate(COV = round((Std.dev/Obesity_mean),digits =2))
+head(Obesity4)
+## To keep to the original format of the data, i assigned a sorting mechanism to an object called *reorder*, and then used the slice(match()) functions to rearrange them in my desired order. R naturally arranges rows based on numerics first, and strings second.
+reorder<-c("Under 16", "16 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65 to 74", "75 & Over")
+Obesity4%>% slice(match(reorder, Age_Groups))
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
